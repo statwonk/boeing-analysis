@@ -5,10 +5,8 @@ library(mdbr)
 # list tables
 mdb_tables("avall.mdb")
 # read events data
-read_mdb("avall.mdb", "dt_events") -> events
-read_mdb("avall.mdb", "dt_aircraft") -> dt_aircraft
+read_mdb("avall.mdb", "events") -> events
 read_mdb("avall.mdb", "aircraft") -> aircraft
-
 
 events %>%
     mutate(date = substr(ev_id, 1, 8),
@@ -95,7 +93,7 @@ lm(events ~ I(departures_performed / 1e5) : type - 1,
 summary(fit)
 
 events_by_make3 %>%
-    mutate(events_per_100k_departures = events / (seats_flown / 1e6)) %>%
+    mutate(events_per_100k_departures = events / (departures_performed / 1e5)) %>%
     ggplot(aes(date, events_per_100k_departures, color = factor(type))) +
     geom_line() +
     geom_point() +
@@ -109,6 +107,6 @@ events_by_make3 %>%
           panel.grid = element_blank()) +
     ylab("NTSB events per 100k depatures") +
     ggtitle("NTSB events per 100k depatures") +
-    # scale_y_continuous(breaks = seq(0, 10, 2)) +
+    scale_y_continuous(breaks = seq(0, 10, 2)) +
     xlab("Year")
 
