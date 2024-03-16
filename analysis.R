@@ -80,7 +80,9 @@ list.files(pattern = ".csv") %>%
 
 
 flights %>%
-    mutate(date = as.POSIXct(paste(year, month, "01", sep = "-"), tz = "UTC")) %>%
+    mutate(date = as.POSIXct(paste(year, sprintf("%02d", month), "01", sep = "-"), 
+                             format = "%Y-%m-%d",
+                             tz = "UTC")) %>%
     group_by(date = lubridate::floor_date(date, "quarter"),
              aircraft_type) %>%
     left_join(
