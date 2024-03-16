@@ -13,9 +13,11 @@ read_mdb("avall.mdb", "aircraft") -> aircraft
 events %>%
     mutate(date = substr(ev_id, 1, 8),
            date = lubridate::parse_date_time2(date, "Ymd")) %>%
-    left_join(aircraft, by = "ev_id") -> d
+    left_join(aircraft, by = "ev_id") %>%
+    distinct(ev_id, Aircraft_Key, .keep_all = T) -> d
 
 d %>%
+    distinct(ev_id, Aircraft_Key, .keep_all = T) %>%
     count(date = lubridate::floor_date(date, "month")) %>%
     ggplot(aes(date, n)) +
     geom_bar(stat = "identity")
