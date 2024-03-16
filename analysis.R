@@ -24,25 +24,6 @@ d %>%
     mutate(n_minus_avg = n - mean(n)) %>%
     ungroup() -> events_by_make2
 
-events_by_make2 %>%
-    filter(acft_make %in% c("BOEING", "AIRBUS")) %>%
-    # remove partial current half
-    filter(accident_date < max(accident_date)) %>%
-    ggplot(aes(accident_date, n, color = acft_make)) +
-    geom_line(linewidth = 0.8) +
-    geom_point(size = 2) +
-    geom_hline(yintercept = 0) +
-    ggtitle("NTSB events per quarter") +
-    ylab("NTSB events per quarter") +
-    xlab("Event Date") +
-    ggthemes::scale_color_colorblind() +
-    theme_bw(17) +
-    scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
-    theme(legend.position = "top",
-          axis.text.x = element_text(color = "black", angle = 45, vjust = 1, hjust = 1),
-          panel.grid = element_blank())
-
-
 # Let's adjust for the number of departures performed
 # https://www.transtats.bts.gov/databases.asp?Z1qr_VQ=E&Z1qr_Qr5p=N8vn6v10&f7owrp6_VQF=D
 list.files(pattern = ".csv") %>%
