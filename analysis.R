@@ -49,9 +49,9 @@ events_by_make2 %>%
     geom_hline(yintercept = 0) +
     ggthemes::scale_color_colorblind() +
     theme_bw(17) +
-    ggtitle("events per quarter") +
-    ylab("events per quarter") +
-    xlab("Accident Date") +
+    ggtitle("NTSB events per quarter") +
+    ylab("NTSB events per quarter") +
+    xlab("Event Date") +
     scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
     theme(legend.position = "top",
           axis.text.x = element_text(color = "black", angle = 45, vjust = 1, hjust = 1),
