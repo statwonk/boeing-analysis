@@ -9,7 +9,7 @@ read_mdb("avall.mdb", "events") -> events
 read_mdb("avall.mdb", "aircraft") -> aircraft
 
 events %>%
-    mutate(date = as.POSIXct(ev_date, format = "%m/%d/%Y %H:%M:%S")) %>%
+    mutate(date = as.POSIXct(ev_date, format = "%m/%d/%y %H:%M:%S", tz = "UTC")) %>%
     left_join(aircraft, by = "ev_id") %>%
     distinct(ev_id, Aircraft_Key, .keep_all = T) -> d
 
