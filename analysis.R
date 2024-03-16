@@ -49,6 +49,7 @@ accidents_by_make2 %>%
     theme_bw(17) +
     ggtitle("Accidents per quarter") +
     ylab("Accidents per quarter") +
+    xlab("Accident Date") +
     scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
     theme(legend.position = "top",
           axis.text.x = element_text(color = "black", angle = 45, vjust = 1, hjust = 1),
