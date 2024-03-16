@@ -16,23 +16,11 @@ events %>%
     left_join(aircraft, by = "ev_id") %>%
     distinct(ev_id, Aircraft_Key, .keep_all = T) -> d
 
-d %>%
-    distinct(ev_id, Aircraft_Key, .keep_all = T) %>%
-    count(date = lubridate::floor_date(date, "month")) %>%
-    ggplot(aes(date, n)) +
-    geom_bar(stat = "identity")
-
-# Count events by make
-d %>% 
-    count(acft_make, sort = T)
-
 # Count events by make and quarter
 d %>%
     count(acft_make,
-          accident_date = lubridate::floor_date(date, "half")) -> events_by_make
-
-# Fill in quarters with 0 to prevent common mistakes that can afflict analysis
-events_by_make %>%
+          accident_date = lubridate::floor_date(date, "half")) %>%
+    # Fill in quarters with 0 to prevent common mistakes that can afflict analysis
     group_by(acft_make) %>%
     complete(accident_date = seq.POSIXt(min(accident_date), max(accident_date), by = "6 month"), 
              fill = list(n = 0)) %>%
@@ -60,26 +48,11 @@ events_by_make2 %>%
 
 # Let's adjust for the number of departures performed
 # https://www.transtats.bts.gov/databases.asp?Z1qr_VQ=E&Z1qr_Qr5p=N8vn6v10&f7owrp6_VQF=D
-read_csv("2023_T_T100D_SEGMENT_US_CARRIER_ONLY.csv") %>%
-    janitor::clean_names() -> flights
-
-flights %>% count(quarter)
-
-
-read_csv("2022_T_T100D_SEGMENT_US_CARRIER_ONLY.csv") %>%
-    janitor::clean_names() -> flights_2022
-
-flights_2022 %>% count(quarter)
-
-
 list.files(pattern = ".csv") %>%
     map_df(~ read_csv(.x) %>% mutate(file = .x)) %>%
     mutate(year = substr(file, 1, 4)) %>%
     janitor::clean_names() %>%
-    select(year, month, aircraft_type, passengers, departures_performed, seats) -> flights
-
-
-flights %>%
+    select(year, month, aircraft_type, passengers, departures_performed, seats) %>%
     mutate(date = as.POSIXct(paste(year, sprintf("%02d", month), "01", sep = "-"), 
                              format = "%Y-%m-%d",
                              tz = "UTC")) %>%
@@ -113,7 +86,6 @@ events_by_make2 %>%
     filter(date < max(date)) -> events_by_make3
 
 
-
 lm(events ~ I(departures_performed / 1e3):type, 
    data = events_by_make3) -> fit
 
@@ -123,3 +95,5 @@ events_by_make3 %>%
     mutate(events_per_100k_departures = events / (departures_performed / 1e5)) %>%
     ggplot(aes(date, events_per_100k_departures)) +
     geom_line(aes(color = factor(type)))
+
+
