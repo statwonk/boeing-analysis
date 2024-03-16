@@ -75,15 +75,17 @@ summary(fit)
 events_by_make3 %>%
     mutate(events_per_100k_departures = events / (departures_performed / 1e5)) %>%
     ggplot(aes(date, events_per_100k_departures, color = factor(type))) +
-    geom_line() +
-    geom_point() +
+    geom_line(linewidth = 1) +
+    geom_point(size = 3) +
     geom_hline(yintercept = 0) +
     ggthemes::scale_color_colorblind(name = "",
                                      guide = guide_legend(override.aes = list(linewidth = 5))) +
     theme_bw(17) +
     scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
     theme(legend.position = "top",
-          axis.text.x = element_text(color = "black", angle = 45, vjust = 1, hjust = 1),
+          axis.text.x = element_text(
+              color = "black", 
+              angle = 45, vjust = 1, hjust = 1),
           panel.grid = element_blank()) +
     ylab("NTSB events per 100k depatures") +
     ggtitle("NTSB events per 100k depatures") +
