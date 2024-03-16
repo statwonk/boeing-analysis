@@ -22,24 +22,24 @@ d %>%
     ggplot(aes(date, n)) +
     geom_bar(stat = "identity")
 
-# Count accidents by make
+# Count events by make
 d %>% 
     count(acft_make, sort = T)
 
-# Count accidents by make and quarter
+# Count events by make and quarter
 d %>%
     count(acft_make,
-          accident_date = lubridate::floor_date(date, "half")) -> accidents_by_make
+          accident_date = lubridate::floor_date(date, "half")) -> events_by_make
 
 # Fill in quarters with 0 to prevent common mistakes that can afflict analysis
-accidents_by_make %>%
+events_by_make %>%
     group_by(acft_make) %>%
     complete(accident_date = seq.POSIXt(min(accident_date), max(accident_date), by = "6 month"), 
              fill = list(n = 0)) %>%
     mutate(n_minus_avg = n - mean(n)) %>%
-    ungroup() -> accidents_by_make2
+    ungroup() -> events_by_make2
 
-accidents_by_make2 %>%
+events_by_make2 %>%
     filter(acft_make %in% c("BOEING", "AIRBUS")) %>%
     # remove partial current half
     filter(accident_date < max(accident_date)) %>%
@@ -49,8 +49,8 @@ accidents_by_make2 %>%
     geom_hline(yintercept = 0) +
     ggthemes::scale_color_colorblind() +
     theme_bw(17) +
-    ggtitle("Accidents per quarter") +
-    ylab("Accidents per quarter") +
+    ggtitle("events per quarter") +
+    ylab("events per quarter") +
     xlab("Accident Date") +
     scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
     theme(legend.position = "top",
@@ -99,16 +99,25 @@ flights %>%
     ungroup() -> flights_per_quarter
 
 
-accidents_by_make2 %>%
+events_by_make2 %>%
     mutate(type = case_when(grepl("Boeing", acft_make, ignore.case = T) ~ "Boeing",
                             grepl("Airbus", acft_make, ignore.case = T) ~ "Airbus",
                             TRUE ~ "All other makers")) %>%
     filter(type != "All other makers") %>%
     select(type, date = accident_date, n) %>%
     group_by(type, date) %>%
-    summarise(accidents = sum(n), .groups = "drop") %>%
+    summarise(events = sum(n), .groups = "drop") %>%
     inner_join(flights_per_quarter) %>%
-    filter(date < max(date)) -> accidents_by_make3
+    filter(date < max(date)) -> events_by_make3
 
 
 
+lm(events ~ I(departures_performed / 1e3):type, 
+   data = events_by_make3) -> fit
+
+summary(fit)
+
+events_by_make3 %>%
+    mutate(events_per_100k_departures = events / (departures_performed / 1e5)) %>%
+    ggplot(aes(date, events_per_100k_departures)) +
+    geom_line(aes(color = factor(type)))
