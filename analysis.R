@@ -2,8 +2,6 @@ library(tidyverse)
 library(mdbr)
 # source: https://data.ntsb.gov/avdata
 
-read_csv22 <- \(x) { read_csv(x, show_col_types = FALSE) }
-
 # list tables
 mdb_tables("avall.mdb")
 # read events data
@@ -51,7 +49,7 @@ events_by_make2 %>%
 # Let's adjust for the number of departures performed
 # https://www.transtats.bts.gov/databases.asp?Z1qr_VQ=E&Z1qr_Qr5p=N8vn6v10&f7owrp6_VQF=D
 list.files(pattern = ".csv") %>%
-    map_df(~ read_csv2(.x) %>% mutate(file = .x)) %>%
+    map_df(~ read_csv(.x) %>% mutate(file = .x)) %>%
     mutate(year = substr(file, 1, 4)) %>%
     janitor::clean_names() %>%
     select(year, month, aircraft_type, passengers, departures_performed, seats) %>%
@@ -61,7 +59,7 @@ list.files(pattern = ".csv") %>%
     group_by(date = lubridate::floor_date(date, "quarter"),
              aircraft_type) %>%
     left_join(
-        read_csv2("L_AIRCRAFT_TYPE.csv",
+        read_csv("L_AIRCRAFT_TYPE.csv",
                  show_col_types = FALSE) %>%
             janitor::clean_names() %>%
             rename(aircraft_type = code),
