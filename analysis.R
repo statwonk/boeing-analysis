@@ -35,11 +35,11 @@ events_by_make2 %>%
     geom_line(linewidth = 0.8) +
     geom_point(size = 2) +
     geom_hline(yintercept = 0) +
-    ggthemes::scale_color_colorblind() +
-    theme_bw(17) +
     ggtitle("NTSB events per quarter") +
     ylab("NTSB events per quarter") +
     xlab("Event Date") +
+    ggthemes::scale_color_colorblind() +
+    theme_bw(17) +
     scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
     theme(legend.position = "top",
           axis.text.x = element_text(color = "black", angle = 45, vjust = 1, hjust = 1),
@@ -69,6 +69,8 @@ list.files(pattern = ".csv") %>%
                             TRUE ~ "All other makers")) %>%
     group_by(date, type) %>%
     summarise(departures_performed = sum(departures_performed),
+              passengers_flown = sum(passengers),
+              seats_flown = sum(seats),
               .groups = "drop") %>%
     arrange(type, date) %>%
     ungroup() -> flights_per_quarter
@@ -86,14 +88,27 @@ events_by_make2 %>%
     filter(date < max(date)) -> events_by_make3
 
 
-lm(events ~ I(departures_performed / 1e3):type, 
+# Assume 0 events given 0 departures by not including an intercept
+lm(events ~ I(departures_performed / 1e5) : type - 1, 
    data = events_by_make3) -> fit
 
 summary(fit)
 
 events_by_make3 %>%
-    mutate(events_per_100k_departures = events / (departures_performed / 1e5)) %>%
-    ggplot(aes(date, events_per_100k_departures)) +
-    geom_line(aes(color = factor(type)))
-
+    mutate(events_per_100k_departures = events / (seats_flown / 1e6)) %>%
+    ggplot(aes(date, events_per_100k_departures, color = factor(type))) +
+    geom_line() +
+    geom_point() +
+    geom_hline(yintercept = 0) +
+    ggthemes::scale_color_colorblind(name = "",
+                                     guide = guide_legend(override.aes = list(linewidth = 5))) +
+    theme_bw(17) +
+    scale_x_datetime(date_breaks = "1 year", date_labels = "%Y") +
+    theme(legend.position = "top",
+          axis.text.x = element_text(color = "black", angle = 45, vjust = 1, hjust = 1),
+          panel.grid = element_blank()) +
+    ylab("NTSB events per 100k depatures") +
+    ggtitle("NTSB events per 100k depatures") +
+    # scale_y_continuous(breaks = seq(0, 10, 2)) +
+    xlab("Year")
 
