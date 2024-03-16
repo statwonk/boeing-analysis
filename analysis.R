@@ -58,4 +58,39 @@ accidents_by_make2 %>%
           panel.grid = element_blank())
     
     
-    
+# Let's adjust for the number of departures performed
+# https://www.transtats.bts.gov/databases.asp?Z1qr_VQ=E&Z1qr_Qr5p=N8vn6v10&f7owrp6_VQF=D
+read_csv("2023_T_T100D_SEGMENT_US_CARRIER_ONLY.csv") %>%
+    janitor::clean_names() -> flights
+
+flights %>% count(quarter)
+
+
+read_csv("2022_T_T100D_SEGMENT_US_CARRIER_ONLY.csv") %>%
+    janitor::clean_names() -> flights_2022
+
+flights_2022 %>% count(quarter)
+
+
+list.files(pattern = ".csv") %>%
+    map_df(~ read_csv(.x) %>% mutate(file = .x)) %>%
+    mutate(year = substr(file, 1, 4)) %>%
+    janitor::clean_names() %>%
+    select(year, month, aircraft_type, passengers, departures_performed, seats) -> flights
+
+
+flights %>%
+    mutate(date = as.POSIXct(paste(year, month, "01", sep = "-"))) %>%
+    group_by(date = lubridate::floor_date(date, "quarter"),
+             aircraft_type) %>%
+    left_join(
+        read_csv("L_AIRCRAFT_TYPE.csv") %>%
+            janitor::clean_names() %>%
+            rename(aircraft_type = code),
+        by = "aircraft_type") %>%
+    mutate(type = case_when(grepl("Boeing", description, ignore.case = T) ~ "Boeing",
+                            grepl("Airbus", description, ignore.case = T) ~ "Airbus",
+                            TRUE ~ "All other makers")) %>%
+    group_by(date, type) %>%
+    summarise(departures_performed = sum(departures_performed)) %>%
+    arrange(type, date) -> flights_per_quarter
